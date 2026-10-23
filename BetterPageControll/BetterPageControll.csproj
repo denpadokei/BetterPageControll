@@ -43,7 +43,7 @@
   </PropertyGroup>
   <!-- Used by nicoco007/setup-beat-saber in CI. -->
   <ItemGroup>
-    <DependsOn Include="BSIPA" Version="^4.2.0" />
+    <DependsOn Include="BSIPA" Version="^4.3.6" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">

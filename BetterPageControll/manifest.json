@@ -7,6 +7,6 @@
   "description": "Restores the Beat Saber 1.29.1 playlist grid layout (6 columns, vertical scrolling) on 1.40.8.",
   "gameVersion": "1.40.8",
   "dependsOn": {
-    "BSIPA": "^4.2.0"
+    "BSIPA": "^4.3.6"
   }
 }
