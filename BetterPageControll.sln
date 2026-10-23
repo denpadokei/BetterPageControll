@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BetterPageControll", "BetterPageControll\BetterPageControll.csproj", "{EAD45CD8-FF36-48FB-A9A5-2E328570BC32}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EAD45CD8-FF36-48FB-A9A5-2E328570BC32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAD45CD8-FF36-48FB-A9A5-2E328570BC32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAD45CD8-FF36-48FB-A9A5-2E328570BC32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAD45CD8-FF36-48FB-A9A5-2E328570BC32}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7CF9406B-13E6-441B-9BDD-1C9B1E2F88B9}
+	EndGlobalSection
+EndGlobal

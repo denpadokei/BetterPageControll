@@ -1,0 +1,12 @@
+﻿{
+  "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
+  "id": "BetterPageControll",
+  "name": "BetterPageControll",
+  "author": "",
+  "version": "0.0.1",
+  "description": "",
+  "gameVersion": "1.40.8",
+  "dependsOn": {
+    "BSIPA": "^4.2.0"
+  }
+}
