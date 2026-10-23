@@ -78,7 +78,9 @@ Beat Saber 1.40.8 のプレイリスト画面を、1.29.1 相当のグリッド�
 
 - `BetterPageControll/**`、`BetterPageControll.sln`、ワークフロー自身の変更で実行
 - `nicoco007/setup-beat-saber@v1` で Beat Saber 1.40.8 の参照アセンブリと BSIPA を取得
-- Release ビルド後、`BetterPageControll/bin/Release/zip/*.zip` を Artifact としてアップロード
+- Release ビルド後、`BetterPageControll/bin/Release/Artifact` を Artifact としてアップロード
+  - 中身は `Plugins/BetterPageControll.dll` と `Plugins/BetterPageControll.pdb`
+  - GitHub Actions 上では BSMT の既定動作で zip 作成が無効になるため、zip ではなく `Artifact` フォルダをアップロード
 - 手動実行は GitHub の **Actions** タブ → **Build** → **Run workflow** から
 
 ## 仕組み
