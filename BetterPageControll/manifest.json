@@ -2,9 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
   "id": "BetterPageControll",
   "name": "BetterPageControll",
-  "author": "",
+  "author": "denpadokei",
   "version": "0.0.1",
-  "description": "",
+  "description": "Restores the Beat Saber 1.29.1 playlist grid layout (6 columns, vertical scrolling) on 1.40.8.",
   "gameVersion": "1.40.8",
   "dependsOn": {
     "BSIPA": "^4.2.0"

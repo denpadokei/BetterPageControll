@@ -1,129 +1,104 @@
-﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using UnityEngine;
+﻿using System;
+using HarmonyLib;
 
 namespace BetterPageControll.Patches
 {
     /// <summary>
-    /// Minimal patch: Only intercept Init and ScrollToRowIdxInstant to adapt 2D API to 1D behavior.
-    /// AnimateClose/AnimateOpen are NOT patched — let the original implementation handle them.
-    /// The original already has correct DespawnAllActiveTweens; we just need to set the right fields.
+    /// Restores the 1.29.1 playlist grid animation.
+    ///
+    /// 1.29.1 only expanded the grid vertically. 1.40.8 expands it in both
+    /// directions: AnimateOpen widens the viewport to
+    /// (columnCount + 2) * cellWidth, which makes the invisible
+    /// ContentInteractionArea wider than the playlist row. With hundreds of
+    /// playlists that area also becomes very tall and ends up covering the
+    /// PageControl strip, so some page dots stop receiving pointer hits.
+    ///
+    /// The legacy layout is obtained by:
+    ///  * forcing the playlist GridView to the 1.29.1 column count (6) in
+    ///    AnnotatedBeatmapLevelCollectionsGridView.SetData;
+    ///  * always returning 0 from GetContentXOffset, so the content never
+    ///    scrolls horizontally;
+    ///  * temporarily using a column count of visibleColumnCount - 2 while
+    ///    AnimateOpen computes its viewport width, which keeps the width at
+    ///    visibleColumnCount * cellWidth;
+    ///  * temporarily clearing _padding, because 1.29.1's height formula
+    ///    had no padding (1.40.8 adds _padding * 2).
     /// </summary>
-    [HarmonyPatch(typeof(AnnotatedBeatmapLevelCollectionsGridViewAnimator))]
-    internal class AnnotatedBeatmapLevelCollectionsGridViewAnimatorPatch
+    internal static class AnnotatedBeatmapLevelCollectionsGridViewAnimatorLegacyPatch
     {
-        [HarmonyTargetMethods]
-        public static IEnumerable<MethodBase> TargetMethods()
+        private sealed class AnimateOpenState
         {
-            var t = typeof(AnnotatedBeatmapLevelCollectionsGridViewAnimator);
+            public readonly int ColumnCount;
+            public readonly float Padding;
 
-            // Target the new 5-param Init only
-            var initMethod = t.GetMethod(
-                nameof(AnnotatedBeatmapLevelCollectionsGridViewAnimator.Init),
-                BindingFlags.Public | BindingFlags.Instance,
-                null,
-                new[] { typeof(float), typeof(float), typeof(int), typeof(int), typeof(int) },
-                null
-            );
-
-            if (initMethod != null)
-                yield return initMethod;
-
-            // Target the new 2-param ScrollToRowIdxInstant
-            var scrollMethod = t.GetMethod(
-                nameof(AnnotatedBeatmapLevelCollectionsGridViewAnimator.ScrollToRowIdxInstant),
-                BindingFlags.Public | BindingFlags.Instance,
-                null,
-                new[] { typeof(int), typeof(int) },
-                null
-            );
-
-            if (scrollMethod != null)
-                yield return scrollMethod;
+            public AnimateOpenState(int columnCount, float padding)
+            {
+                ColumnCount = columnCount;
+                Padding = padding;
+            }
         }
 
-        [HarmonyPrefix]
-        public static bool Prefix(MethodBase __originalMethod, AnnotatedBeatmapLevelCollectionsGridViewAnimator __instance, object[] __args)
+        [HarmonyPatch(typeof(AnnotatedBeatmapLevelCollectionsGridViewAnimator), "GetContentXOffset")]
+        private static class GetContentXOffsetPatch
         {
-            if (__originalMethod == null || __args == null)
-                return true;
-
-            string methodName = __originalMethod.Name;
-
-            try
+            [HarmonyPrefix]
+            private static bool Prefix(ref float __result)
             {
-                switch (methodName)
+                // 1.29.1 did not scroll horizontally at all.
+                __result = 0f;
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(AnnotatedBeatmapLevelCollectionsGridViewAnimator), nameof(AnnotatedBeatmapLevelCollectionsGridViewAnimator.AnimateOpen))]
+        private static class AnimateOpenPatch
+        {
+            [HarmonyPrefix]
+            private static void Prefix(AnnotatedBeatmapLevelCollectionsGridViewAnimator __instance, out AnimateOpenState __state)
+            {
+                __state = null;
+
+                try
                 {
-                    case nameof(AnnotatedBeatmapLevelCollectionsGridViewAnimator.Init):
-                        {
-                            // Init(float columnWidth, float rowHeight, int columnCount, int rowCount, int visibleColumnCount)
-                            float columnWidth = (float)__args[0];
-                            float rowHeight = (float)__args[1];
-                            int columnCount = (int)__args[2];
-                            int rowCount = (int)__args[3];
-                            int visibleColumnCount = (int)__args[4];
+                    var traverse = Traverse.Create(__instance);
+                    int visibleColumnCount = traverse.Field("_visibleColumnCount").GetValue<int>();
 
-                            var traverse = Traverse.Create(__instance);
+                    // Save the serialized values so the rest of the game keeps
+                    // seeing the normal 1.40.8 configuration.
+                    __state = new AnimateOpenState(
+                        traverse.Field("_columnCount").GetValue<int>(),
+                        traverse.Field("_padding").GetValue<float>());
 
-                            // Store the parameters (needed for AnimateClose offsets)
-                            traverse.Field("_columnWidth").SetValue(columnWidth);
-                            traverse.Field("_rowHeight").SetValue(rowHeight);
-                            traverse.Field("_columnCount").SetValue(columnCount);
-                            traverse.Field("_rowCount").SetValue(rowCount);
-                            traverse.Field("_visibleColumnCount").SetValue(visibleColumnCount);
-                            traverse.Field("_selectedColumn").SetValue(0);
-                            traverse.Field("_selectedRow").SetValue(0);
-
-                            var contentTransform = traverse.Field("_contentTransform").GetValue<RectTransform>();
-                            var viewportTransform = traverse.Field("_viewportTransform").GetValue<RectTransform>();
-
-                            // Old behavior: Y dimension only (X dimension preserved as-is)
-                            Vector2 contentSize = contentTransform.sizeDelta;
-                            contentSize.y = rowHeight * (float)rowCount;
-                            contentTransform.sizeDelta = contentSize;
-
-                            Vector2 viewportSize = viewportTransform.sizeDelta;
-                            viewportSize.y = rowHeight;
-                            viewportTransform.sizeDelta = viewportSize;
-
-                            // Reset Y position
-                            var anchoredPos = contentTransform.anchoredPosition;
-                            anchoredPos.y = 0f;
-                            contentTransform.anchoredPosition = anchoredPos;
-
-                            return false; // Skip original
-                        }
-
-                    case nameof(AnnotatedBeatmapLevelCollectionsGridViewAnimator.ScrollToRowIdxInstant):
-                        {
-                            // ScrollToRowIdxInstant(int selectedColumn, int selectedRow)
-                            int selectedColumn = (int)__args[0];
-                            int selectedRow = (int)__args[1];
-
-                            var traverse = Traverse.Create(__instance);
-                            traverse.Field("_selectedColumn").SetValue(selectedColumn);
-                            traverse.Field("_selectedRow").SetValue(selectedRow);
-
-                            var contentTransform = traverse.Field("_contentTransform").GetValue<RectTransform>();
-                            var anchoredPos = contentTransform.anchoredPosition;
-
-                            // Scroll Y only (old behavior: 1D vertical scrolling)
-                            float rowHeight = traverse.Field("_rowHeight").GetValue<float>();
-                            anchoredPos.y = -selectedRow * rowHeight;
-                            contentTransform.anchoredPosition = anchoredPos;
-
-                            return false; // Skip original
-                        }
+                    // AnimateOpen computes width as (columnCount + 2) * columnWidth.
+                    traverse.Field("_columnCount").SetValue(visibleColumnCount - 2);
+                    traverse.Field("_padding").SetValue(0f);
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log?.Error("[BetterPageControll] Failed to prepare legacy AnimateOpen: " + ex);
+                    __state = null;
                 }
             }
-            catch (Exception ex)
-            {
-                UnityEngine.Debug.LogError($"[AnnotatedBeatmapLevelCollectionsGridViewAnimator Patch] Error in {methodName}: {ex}");
-            }
 
-            return true;
+            [HarmonyPostfix]
+            private static void Postfix(AnnotatedBeatmapLevelCollectionsGridViewAnimator __instance, AnimateOpenState __state)
+            {
+                if (__state == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    var traverse = Traverse.Create(__instance);
+                    traverse.Field("_columnCount").SetValue(__state.ColumnCount);
+                    traverse.Field("_padding").SetValue(__state.Padding);
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log?.Error("[BetterPageControll] Failed to restore fields after AnimateOpen: " + ex);
+                }
+            }
         }
     }
 }
