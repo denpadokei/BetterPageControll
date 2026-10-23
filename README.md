@@ -72,6 +72,15 @@ Beat Saber 1.40.8 のプレイリスト画面を、1.29.1 相当のグリッド�
    BetterPageControll/bin/Debug/BetterPageControll.dll
    ```
 
+## CI
+
+`.github/workflows/build.yml` で GitHub Actions による自動ビルドを行います。
+
+- `BetterPageControll/**`、`BetterPageControll.sln`、ワークフロー自身の変更で実行
+- `nicoco007/setup-beat-saber@v1` で Beat Saber 1.40.8 の参照アセンブリと BSIPA を取得
+- Release ビルド後、`BetterPageControll/bin/Release/zip/*.zip` を Artifact としてアップロード
+- 手動実行は GitHub の **Actions** タブ → **Build** → **Run workflow** から
+
 ## 仕組み
 
 本MODはゲーム本体のファイルを書き換えず、HarmonyX で実行時に次の3点を変更します。
@@ -97,6 +106,9 @@ Beat Saber 1.40.8 のプレイリスト画面を、1.29.1 相当のグリッド�
 
 ```text
 BetterPageControll/
+├─ .github/
+│  └─ workflows/
+│     └─ build.yml
 ├─ .gitignore
 ├─ README.md
 ├─ BetterPageControll.sln

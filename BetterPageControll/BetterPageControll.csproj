@@ -15,7 +15,9 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>
     <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>
-    <GameDirectory>$(LocalRefsDir)</GameDirectory>
+    <GameDirectory Condition="'$(GameDirectory)' == ''">$(LocalRefsDir)</GameDirectory>
+    <!-- Used by nicoco007/setup-beat-saber in CI. -->
+    <GameVersion>1.40.8</GameVersion>
     <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
     <!--<PathMap>$(AppOutputBase)=X:\$(AssemblyName)\</PathMap>-->
     <ErrorReport>prompt</ErrorReport>
@@ -39,6 +41,10 @@
     <DisableCopyToPlugins>True</DisableCopyToPlugins>
     <DisableZipRelease>True</DisableZipRelease>
   </PropertyGroup>
+  <!-- Used by nicoco007/setup-beat-saber in CI. -->
+  <ItemGroup>
+    <DependsOn Include="BSIPA" Version="^4.2.0" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>$(GameDirectory)\Libs\0Harmony.dll</HintPath>
@@ -72,7 +78,8 @@
       <Publicize>True</Publicize>
     </Reference>
     <Reference Include="IPA.Loader">
-      <HintPath>$(GameDirectory)\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
+      <HintPath Condition="Exists('$(GameDirectory)\Beat Saber_Data\Managed\IPA.Loader.dll')">$(GameDirectory)\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
+      <HintPath Condition="!Exists('$(GameDirectory)\Beat Saber_Data\Managed\IPA.Loader.dll')">$(GameDirectory)\Beat Saber_Data\IPA.Loader.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Tweening, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">

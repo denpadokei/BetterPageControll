@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    paths:
+      - .github/workflows/build.yml
+      - BetterPageControll.sln
+      - BetterPageControll/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Beat Saber
+        uses: nicoco007/setup-beat-saber@v1
+        with:
+          project-path: ${{ github.workspace }}\BetterPageControll\BetterPageControll.csproj
+
+      - name: Build Release
+        run: dotnet build "${{ github.workspace }}\BetterPageControll\BetterPageControll.csproj" -c Release -p:DisableCopyToGame=true
+
+      - name: Upload Release
+        uses: actions/upload-artifact@v7
+        with:
+          name: BetterPageControll
+          path: ${{ github.workspace }}\BetterPageControll\bin\Release\zip\*.zip
+          if-no-files-found: error
