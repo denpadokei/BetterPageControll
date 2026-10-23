@@ -17,7 +17,7 @@ Beat Saber 1.40.8 のプレイリスト画面を、1.29.1 相当のグリッド�
 | 項目 | 要件 |
 | --- | --- |
 | Beat Saber | 1.40.8 |
-| BSIPA | 4.2.0 以上 |
+| BSIPA | 4.3.6 以上 |
 | HarmonyX | BSIPA 環境の `Libs/0Harmony.dll` |
 | 設定ファイル | なし |
 
